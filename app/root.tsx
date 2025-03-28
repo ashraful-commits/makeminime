@@ -1,20 +1,15 @@
 import {
-  json,
   Links,
   Meta,
   Outlet,
   Scripts,
   ScrollRestoration,
+  useRouteError,
 } from "@remix-run/react";
 import type { LinksFunction } from "@remix-run/node";
 
 import "./tailwind.css";
-import { getEnv } from "./lib/env.server";
 
-
-export const loader = async () => {
-  return json({ env: getEnv() });
-};
 export const links: LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
   {
@@ -49,4 +44,25 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   return <Outlet />;
+}
+
+export function ErrorBoundary() {
+  const error = useRouteError();
+  console.error(error);
+  return (
+    <html lang="en">
+      <head>
+        <title>Oh no!</title>
+        <Meta />
+        <Links />
+      </head>
+      <body>
+       <div className="h-screen w-screen flex flex-col justify-center items-center">
+       {error.data &&<h1 className="text-xl text-red-500">{error.data}</h1>}
+        <a href="https://makeminime.com/" className="border px-8 py-4 my-5 hover:bg-blue-500 hover:text-white transition-all duration-500"> &larr; back to home</a>
+       </div>
+        <Scripts />
+      </body>
+    </html>
+  );
 }
