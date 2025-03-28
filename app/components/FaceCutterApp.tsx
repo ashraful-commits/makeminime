@@ -6,6 +6,7 @@ import { FaBrush, FaCheck } from "react-icons/fa"; // Added for brush, undo, and
 import { IoArrowBackOutline } from "react-icons/io5"; // Added for the back button
 const FaceCutterApp = ({ faceImage, setStep, setCropedImage }) => {
   const [removeBG, setRemoveBG] = useState(null);
+  const [error, setError] = useState("");
   const [isErasing, setIsErasing] = useState(false);
   const [brushSize, setBrushSize] = useState(20);
   const canvasRef = useRef(null);
@@ -127,7 +128,10 @@ const FaceCutterApp = ({ faceImage, setStep, setCropedImage }) => {
         body: formData,
       });
   
-      if (!response.ok) throw new Error("API Error");
+      if (!response.ok) {
+        setError("add perfect image")
+        // throw new Error("API Error")
+      }
   
       // Convert response to Blob and create object URL
       const blob = await response.blob();
@@ -178,7 +182,10 @@ const FaceCutterApp = ({ faceImage, setStep, setCropedImage }) => {
         body: formData,
       });
   
-      if (!response.ok) throw new Error("API Error");
+      if (!response.ok) {
+        setError("Pelase add perfect image!")
+        // throw new Error("API Error")
+      }
   
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
@@ -196,17 +203,19 @@ const FaceCutterApp = ({ faceImage, setStep, setCropedImage }) => {
 
   const handleBack = () => {
     setStep(1);
+    setError("")
   };
   const handleConfirm = () => {
     setStep(3);
+    setError("")
   };
-
+console.log(error)
   return (
     <div className="w-[50%] max-sm:w-full flex space-y-10 flex-col items-center justify-center border-gray-300 lg:border-r md:border-r max-sm:border-b min-h-[80vh] p-4 bg-white  rounded-lg relative">
       <h2 className="text-xl font-semibold text-center text-gray-800 mb-6">
         Edit you photo
       </h2>
-
+        {error && <p className="text-red-500 text-sm">{error}</p>}
       {!removeBG && (
         <div className="w-full h-[35vh] flex justify-center items-center">
           <img
@@ -218,7 +227,7 @@ const FaceCutterApp = ({ faceImage, setStep, setCropedImage }) => {
       )}
 
       <div className="flex justify-center max-sm:flex-col gap-4 mb-6 mt-20">
-        {removeBG && (
+        {!error&& removeBG && (
           <button
             onClick={toggleErase}
             className={`px-2 py-1 rounded-sm text-sm  flex justify-cener items-center gap-2 transition-colors font-light ${
@@ -239,7 +248,7 @@ const FaceCutterApp = ({ faceImage, setStep, setCropedImage }) => {
           </button>
         )}
 
-        {isErasing && removeBG && (
+        {!error&& isErasing && removeBG && (
           <div className="flex items-center gap-2">
             <label htmlFor="brushSize" className="text-sm font-light  text-gray-700">
               Brush Size
@@ -256,7 +265,7 @@ const FaceCutterApp = ({ faceImage, setStep, setCropedImage }) => {
           </div>
         )}
 
-        {removeBG && (
+        { !error&& removeBG && (
           <button
             onClick={saveErasedImage}
             className="px-2 py-1 gap-1 bg-blue-200 border border-blue-500 text-blue-500 hover:text-white hover:bg-blue-700 bg-opacity-50 text-sm font-light rounded-md flex justify-center items-center gap-2"
@@ -286,12 +295,12 @@ const FaceCutterApp = ({ faceImage, setStep, setCropedImage }) => {
         >
           <IoArrowBackOutline className="mr-2" /> Back
         </button>
-        <button
+        {!error&&  <button
           onClick={handleConfirm}
           className="px-2 py-1 text-sm  rounded-md bg-gray-100  hover:bg-blue-700 text-blue-500 bg-opacity-50 border hover:text-white border-blue-500 font-medium flex items-center justify-center "
         >
           <FaCheck className="mr-2" /> confirm
-        </button>
+        </button>}
       </div>
 
 
