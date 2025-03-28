@@ -341,7 +341,7 @@ export default function ProductIdCustomize() {
 
   const handleConfirmExit = (confirm: boolean) => {
     if (confirm) {
-      navigate("https://makeminime.com/");
+      window.location.href = "https://makeminime.com";
     } else {
       setShowPopup(false);
     }
