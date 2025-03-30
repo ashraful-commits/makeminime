@@ -34,7 +34,6 @@ interface WooCommerceProduct {
   [key: string]: any;
 }
 
-
 export const loader: LoaderFunction = async ({ params }) => {
   try {
     const { id: productId } = params;
@@ -59,13 +58,14 @@ export const loader: LoaderFunction = async ({ params }) => {
       CONSUMER_SECRET
     );
 
-    // Process product frame image
-    const { imageUrl } = await processProductFrameImage(product);
+    // Process product frame images
+    const { imageUrl, headImageUrl } = await processProductFrameImage(product);
 
     return json(
       {
         imageUrl,
         productId,
+        headImageUrl, // Keeping only headImageUrl
       },
       {
         headers: {
@@ -115,44 +115,45 @@ async function fetchWooCommerceProduct(
   return await response.json();
 }
 
-// Helper function to process product frame image
+// Helper function to process product frame images
 async function processProductFrameImage(
   product: WooCommerceProduct
-): Promise<{ imageUrl: string }> {
-  const productFrame = product.meta_data?.find(
-    (item) => item.key === "product_frame"
-  );
+): Promise<{ imageUrl: string; headImageUrl: string }> {
+  const getImage = async (key: string): Promise<string> => {
+    const metaDataItem = product.meta_data?.find((item) => item.key === key);
+    if (!metaDataItem?.value) {
+      return "";
+    }
 
-  if (!productFrame?.value) {
-    throw new Response("Product frame not found", { status: 404 });
-  }
+    const imageUrl = await convertNumberToImageLink(metaDataItem.value);
+    if (!imageUrl) {
+      return "";
+    }
 
-  const productFrameImage = await convertNumberToImageLink(productFrame.value);
+    const imageResponse = await fetch(imageUrl);
+    if (!imageResponse.ok) {
+      return "";
+    }
 
-  if (!productFrameImage) {
-    throw new Response("Invalid product frame image", { status: 404 });
-  }
+    const imageBuffer = await imageResponse.arrayBuffer();
+    const base64Image = Buffer.from(imageBuffer).toString("base64");
+    const contentType = imageResponse.headers.get("Content-Type") || "image/jpeg";
 
-  const imageResponse = await fetch(productFrameImage);
-
-  if (!imageResponse.ok) {
-    throw new Response("Failed to fetch product frame image", {
-      status: imageResponse.status,
-    });
-  }
-
-  const imageBuffer = await imageResponse.arrayBuffer();
-  const base64Image = Buffer.from(imageBuffer).toString("base64");
-  const contentType = imageResponse.headers.get("Content-Type") || "image/jpeg";
-
-  return {
-    imageUrl: `data:${contentType};base64,${base64Image}`,
+    return `data:${contentType};base64,${base64Image}`;
   };
+
+  // Fetch only required images
+  const [imageUrl, headImageUrl] = await Promise.all([
+    getImage("product_frame"),
+    getImage("head_image"), // Fetching only headImageUrl
+  ]);
+
+  return { imageUrl, headImageUrl };
 }
 
 export default function ProductIdCustomize() {
   const [images, setImages] = useState<string[]>([]);
-  const { imageUrl, productId } = useLoaderData<typeof loader>();
+  const { imageUrl, headImageUrl, productId } = useLoaderData<typeof loader>();
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -167,6 +168,7 @@ export default function ProductIdCustomize() {
 
   const [loading, setLoading] = useState<boolean>(true);
   const [bodyImage, setBodyImage] = useState<string>("");
+  const [headBackImage, setHeadBackImage] = useState<string>("");
   const [uploadedPhoto, setUploadedPhoto] = useState<string>("");
   const [croppedImage, setCropedImage] = useState<string>("");
   const [skinTone, setSkinTone] = useState<string>(
@@ -222,7 +224,10 @@ export default function ProductIdCustomize() {
     if (imageUrl) {
       setBodyImage(imageUrl);
     }
-  }, [imageUrl]);
+    if (headImageUrl) {
+      setHeadBackImage(headImageUrl);
+    }
+  }, [imageUrl,headImageUrl]);
 
   //  edit photo
   const handleEdit = (index) => {
@@ -421,6 +426,7 @@ export default function ProductIdCustomize() {
               faceImage={croppedImage}
               bodyImage={bodyImage}
               skinTone={skinTone}
+              headBackImage={headBackImage}
               step={step}
               setStep={setStep}
               productId={productId}
