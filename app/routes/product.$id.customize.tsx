@@ -59,13 +59,14 @@ export const loader: LoaderFunction = async ({ params }) => {
     );
 
     // Process product frame images
-    const { imageUrl, headImageUrl } = await processProductFrameImage(product);
+    const { imageUrl, headImageUrl, skinToneImage } = await processProductFrameImage(product);
 
     return json(
       {
         imageUrl,
         productId,
-        headImageUrl, // Keeping only headImageUrl
+        headImageUrl,
+        skinToneImage,
       },
       {
         headers: {
@@ -86,6 +87,7 @@ export const loader: LoaderFunction = async ({ params }) => {
     });
   }
 };
+
 
 // Helper function to fetch WooCommerce product
 async function fetchWooCommerceProduct(
@@ -118,7 +120,7 @@ async function fetchWooCommerceProduct(
 // Helper function to process product frame images
 async function processProductFrameImage(
   product: WooCommerceProduct
-): Promise<{ imageUrl: string; headImageUrl: string }> {
+): Promise<{ imageUrl: string; headImageUrl: string; skinToneImage: string }> {
   const getImage = async (key: string): Promise<string> => {
     const metaDataItem = product.meta_data?.find((item) => item.key === key);
     if (!metaDataItem?.value) {
@@ -142,18 +144,29 @@ async function processProductFrameImage(
     return `data:${contentType};base64,${base64Image}`;
   };
 
-  // Fetch only required images
-  const [imageUrl, headImageUrl] = await Promise.all([
+  // Fetch required images
+  const [imageUrl, headImageUrl, skinToneImage] = await Promise.all([
     getImage("product_frame"),
-    getImage("head_image"), // Fetching only headImageUrl
+    getImage("head_image"),
+    getImage("skin_tone_image"),
   ]);
 
-  return { imageUrl, headImageUrl };
+  return { imageUrl, headImageUrl, skinToneImage };
 }
 
 export default function ProductIdCustomize() {
   const [images, setImages] = useState<string[]>([]);
   const { imageUrl, headImageUrl, productId } = useLoaderData<typeof loader>();
+  const [loading, setLoading] = useState<boolean>(true);
+  const [bodyImage, setBodyImage] = useState<string>("");
+  const [headBackImage, setHeadBackImage] = useState<string>("");
+  const [skinToneImage, setSkinToneImage] = useState<string>("");
+  const [uploadedPhoto, setUploadedPhoto] = useState<string>("");
+  const [croppedImage, setCropedImage] = useState<string>("");
+  const [skinTone, setSkinTone] = useState<string>(
+    "invert(71%) sepia(51%) saturate(280%) hue-rotate(340deg) brightness(86%) contrast(88%)"
+  );
+  const [step, setStep] = useState<number>(0);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -166,16 +179,7 @@ export default function ProductIdCustomize() {
     }
   }, []);
 
-  const [loading, setLoading] = useState<boolean>(true);
-  const [bodyImage, setBodyImage] = useState<string>("");
-  const [headBackImage, setHeadBackImage] = useState<string>("");
-  const [uploadedPhoto, setUploadedPhoto] = useState<string>("");
-  const [croppedImage, setCropedImage] = useState<string>("");
-  const [skinTone, setSkinTone] = useState<string>(
-    "invert(71%) sepia(51%) saturate(280%) hue-rotate(340deg) brightness(86%) contrast(88%)"
-  );
-  const [step, setStep] = useState<number>(0);
-
+ 
   const handleClearPhotos = () => {
     // Clear images from state and localStorage
     setImages([]);
@@ -227,7 +231,10 @@ export default function ProductIdCustomize() {
     if (headImageUrl) {
       setHeadBackImage(headImageUrl);
     }
-  }, [imageUrl,headImageUrl]);
+    if (skinToneImage) {
+      setSkinToneImage(skinToneImage);
+    }
+  }, [imageUrl,headImageUrl,skinToneImage]);
 
   //  edit photo
   const handleEdit = (index) => {
@@ -427,6 +434,7 @@ export default function ProductIdCustomize() {
               bodyImage={bodyImage}
               skinTone={skinTone}
               headBackImage={headBackImage}
+              skinToneImage={skinToneImage}
               step={step}
               setStep={setStep}
               productId={productId}

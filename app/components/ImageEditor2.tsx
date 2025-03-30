@@ -14,11 +14,10 @@ const ImageEditor = ({
   faceImage,
   bodyImage,
   skinTone,
-  SkitToneImage,
   headBackImage,
   setStep,
   step,
-  productId,
+  productId,skinToneImage
 }) => {
   // Refs
   const canvasBodyRef = useRef(null);
@@ -27,11 +26,10 @@ const ImageEditor = ({
   const canvasRef = useRef(null);
   const containerRef = useRef(null);
 
-
   // Default images
   const defaultBodyImage = bodyImage || "/images/SN-CFC-001-24-25_preview.png";
   const defaultSkitToneImage =
-    SkitToneImage || "/images/Snugzy_Shape_preview.png";
+  skinToneImage || "/images/Snugzy_Shape_preview.png";
   const defaultHeadBackImage = headBackImage || "/images/headblack_preview.png";
   const defaultFaceImage = faceImage;
   const defaultSkinTone = skinTone || "grayscale(100%)";
@@ -47,24 +45,24 @@ const ImageEditor = ({
   const drawImageOnCanvas = (canvasRef, imageSrc, filter = "none") => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-  
+
     const ctx = canvas.getContext("2d");
     const image = new Image();
     image.crossOrigin = "anonymous";
     image.src = imageSrc;
-  
+
     image.onload = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.filter = filter;
-  
+
       const width = canvas.width;
       const height = canvas.height;
-  
+
       const targetAspect = width / height;
       const imgAspect = image.naturalWidth / image.naturalHeight;
-  
+
       let drawWidth, drawHeight;
-  
+
       if (imgAspect > targetAspect) {
         drawHeight = height;
         drawWidth = height * imgAspect;
@@ -72,14 +70,13 @@ const ImageEditor = ({
         drawWidth = width;
         drawHeight = width / imgAspect;
       }
-  
+
       const offsetX = (width - drawWidth) / 2;
       const offsetY = (height - drawHeight) / 2;
-  
+
       ctx.drawImage(image, offsetX, offsetY, drawWidth, drawHeight);
     };
   };
-  
 
   useEffect(() => {
     drawImageOnCanvas(canvasBodyRef, defaultBodyImage);
@@ -173,73 +170,77 @@ const ImageEditor = ({
   };
 
   const handleAddToCart = async (id: string, faceImage: string) => {
-    if (!containerRef.current) return;
+    if (!containerRef.current || !faceImage) {
+      console.error('Missing required elements for image processing');
+      return;
+    }
+  
     setLoading(true);
   
     try {
-      // Capture canvas image
-      const canvasImage = await html2canvas(containerRef.current, {
+      // Capture composite image
+      const compositeCanvas = await html2canvas(containerRef.current, {
         useCORS: true,
         backgroundColor: "transparent",
+        logging: process.env.NODE_ENV === 'development',
       });
   
-      const dataUrl = canvasImage.toDataURL("image/png");
+      // Prepare upload promises
+      const uploadImage = async (imageData: string, imageType: string) => {
+        const response = await fetch("/api/upload", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ image: imageData }),
+        });
   
-      // Upload main product image
-      const uploadProductResponse = await fetch("/api/upload", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image: dataUrl }),
-      });
+        if (!response.ok) {
+          throw new Error(`${imageType} image upload failed (${response.status})`);
+        }
   
-      if (!uploadProductResponse.ok) throw new Error("Product image upload failed");
+        const { result }: { result: string } = await response.json();
+        console.log(result)
+        return encodeURIComponent(result);
+      };
+      
   
-      const { result: productImageUrl } = await uploadProductResponse.json();
-      const encodedProductImageUrl = encodeURIComponent(productImageUrl);
+      const [productImageUrl, faceImageUrl] = await Promise.all([
+        uploadImage(compositeCanvas.toDataURL("image/png"), "Composite"),
+        uploadImage(faceImage, "Face"),
+      ]);
+
+      // Validate upload results
+      if (!productImageUrl || !faceImageUrl) {
+        throw new Error("Image URL generation failed");
+      }
   
-      // Upload faceImage
-      const uploadFaceResponse = await fetch("/api/upload", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image: faceImage }), // faceImage is passed as a parameter
-      });
-  
-      if (!uploadFaceResponse.ok) throw new Error("Face image upload failed");
-  
-      const { result: faceImageUrl } = await uploadFaceResponse.json();
-      const encodedFaceImageUrl = encodeURIComponent(faceImageUrl);
-  
-      console.log("Product Image URL:", encodedProductImageUrl);
-      console.log("Face Image URL:", encodedFaceImageUrl);
-  
-      // Send both images to WooCommerce
-      await fetch(
-        `https://makeminime.com/wp-json/custom/v1/set-image?image=${encodedProductImageUrl}&faceImage=${encodedFaceImageUrl}`,
+      // Sync with WooCommerce
+      const syncResponse = await fetch(
+        `https://makeminime.com/wp-json/custom/v1/set-image?image=${productImageUrl}&faceImage=${faceImageUrl}`,
         {
           method: "GET",
           credentials: "include",
         }
       );
   
-      // Redirect to WooCommerce cart with both images
-      window.location.href = `https://makeminime.com/?add-to-cart=${id}&quantity=1&image=${encodedProductImageUrl}&faceImage=${encodedFaceImageUrl}`;
+      if (!syncResponse.ok) {
+        throw new Error(`WooCommerce sync failed (${syncResponse.status})`);
+      }
       
-      setStep(0);
+      // Final redirect
+      window.location.href = `https://makeminime.com/?add-to-cart=${id}&quantity=1&image=${productImageUrl}&faceImage=${faceImageUrl}`;
+  
     } catch (error) {
-      console.error("Error:", error);
-      window.location.href = `https://makeminime.vercel.app/product/${id}/customize`;
+      console.error("Checkout Error:", error);
+      // Implement your error handling strategy here (e.g., toast notifications)
+      window.location.href = `http://localhost:5173/product/${id}/customize?error=${encodeURIComponent((error as Error).message)}`;
     } finally {
       setLoading(false);
     }
   };
-  
+
   return (
     <div className="flex flex-col border-r border-r-gray-500 items-center justify-center w-[50%] max-sm:w-full z-0 min-h-[90vh]">
-      <div
-        className="relative w-full flex justify-center items-center  bg-center bg-no-repeat max-sm:scale-75 "
-       
-
-      >
+      <div className="relative w-full flex justify-center items-center  bg-center bg-no-repeat max-sm:scale-75 ">
         <div
           ref={containerRef}
           className="relative w-[557px] h-[800px] flex justify-center items-center top-0  "
@@ -284,7 +285,7 @@ const ImageEditor = ({
             ref={canvasBodyRef}
             width={"557px"}
             height={"800px"}
-            className=" absolute z-20 h-full " 
+            className=" absolute z-20 h-full "
           />
         </div>
       </div>
@@ -294,7 +295,7 @@ const ImageEditor = ({
         <>
           <div className="flex gap-4 mt-10 absolute right-10 bottom-10 max-sm:bottom-0">
             <button
-              onClick={() => handleAddToCart(productId,faceImage)}
+              onClick={() => handleAddToCart(productId, faceImage)}
               className="bg-green-600 text-white px-6 py-3 flex justify-center items-center rounded-md text-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
             >
               {loading ? (
