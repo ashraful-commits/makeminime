@@ -34,6 +34,7 @@ interface WooCommerceProduct {
   [key: string]: any;
 }
 
+
 export const loader: LoaderFunction = async ({ params }) => {
   try {
     const { id: productId } = params;
@@ -370,7 +371,7 @@ export default function ProductIdCustomize() {
     <div className="h-screen max-sm:h-auto  text-black min-h-[80vh]">
       {/* Exit Link */}
       {loading ? (
-        <div className="loader w-full h-full flex flex-col justify-center items-center">
+        <div className="loader w-full h-screen flex flex-col justify-center items-center">
           <img src="/images/happiness.png" alt="" />
           <p>Let's get this Started...</p>
           <p>Personalisation Tool is Loading</p>
