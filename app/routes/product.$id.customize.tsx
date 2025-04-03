@@ -21,6 +21,8 @@ export const meta: MetaFunction = () => {
 
 import { json } from "@remix-run/node";
 import { Buffer } from "buffer";
+import hexToRgb from "~/utils/hexToTgb";
+import hexToFilter from "~/utils/HexToFilter";
 
 // Type for product meta data
 interface ProductMetaData {
@@ -59,7 +61,8 @@ export const loader: LoaderFunction = async ({ params }) => {
     );
 
     // Process product frame images
-    const { imageUrl, headImageUrl, skinToneImage } = await processProductFrameImage(product);
+    const { imageUrl, headImageUrl, skinToneImage } =
+      await processProductFrameImage(product);
 
     return json(
       {
@@ -87,7 +90,6 @@ export const loader: LoaderFunction = async ({ params }) => {
     });
   }
 };
-
 
 // Helper function to fetch WooCommerce product
 async function fetchWooCommerceProduct(
@@ -139,7 +141,8 @@ async function processProductFrameImage(
 
     const imageBuffer = await imageResponse.arrayBuffer();
     const base64Image = Buffer.from(imageBuffer).toString("base64");
-    const contentType = imageResponse.headers.get("Content-Type") || "image/jpeg";
+    const contentType =
+      imageResponse.headers.get("Content-Type") || "image/jpeg";
 
     return `data:${contentType};base64,${base64Image}`;
   };
@@ -166,6 +169,9 @@ export default function ProductIdCustomize() {
   const [skinTone, setSkinTone] = useState<string>(
     "invert(71%) sepia(51%) saturate(280%) hue-rotate(340deg) brightness(86%) contrast(88%)"
   );
+  const [headBackColor, setHeadBackColor] = useState();
+  const [selectedColor, setSelectedColor] = useState();
+  console.log(headBackColor);
   const [step, setStep] = useState<number>(0);
 
   useEffect(() => {
@@ -179,7 +185,6 @@ export default function ProductIdCustomize() {
     }
   }, []);
 
- 
   const handleClearPhotos = () => {
     // Clear images from state and localStorage
     setImages([]);
@@ -234,7 +239,7 @@ export default function ProductIdCustomize() {
     if (skinToneImage) {
       setSkinToneImage(skinToneImage);
     }
-  }, [imageUrl,headImageUrl,skinToneImage]);
+  }, [imageUrl, headImageUrl, skinToneImage]);
 
   //  edit photo
   const handleEdit = (index) => {
@@ -378,7 +383,7 @@ export default function ProductIdCustomize() {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, [unsavedChanges]);
-
+  
   return (
     <div className="h-screen max-sm:h-auto  text-black min-h-[80vh]">
       {/* Exit Link */}
@@ -585,6 +590,7 @@ export default function ProductIdCustomize() {
                     />
                   ))}
                 </div>
+                
                 {/* Action Buttons */}
                 <div className="w-full flex justify-end gap-6 items-center mt-10">
                   <button

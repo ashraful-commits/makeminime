@@ -34,6 +34,7 @@ const ImageEditor = ({
   const defaultFaceImage = faceImage;
   const defaultSkinTone = skinTone || "grayscale(100%)";
 
+
   // State
   const [imagePosition, setImagePosition] = useState({ x: 0, y: 0 });
   const [scale, setScale] = useState(0.7);
@@ -81,12 +82,12 @@ const ImageEditor = ({
   useEffect(() => {
     drawImageOnCanvas(canvasBodyRef, defaultBodyImage);
     drawImageOnCanvas(canvasSkinToneRef, defaultSkitToneImage, defaultSkinTone);
-    drawImageOnCanvas(canvasHeadBackRef, defaultHeadBackImage);
+    drawImageOnCanvas(canvasHeadBackRef, defaultHeadBackImage,defaultSkinTone);
   }, [
     defaultBodyImage,
     defaultSkitToneImage,
     defaultSkinTone,
-    defaultHeadBackImage,
+    defaultHeadBackImage
   ]);
 
   useEffect(() => {
@@ -258,9 +259,9 @@ const ImageEditor = ({
             <canvas
               id="canvasRef"
               ref={canvasRef}
-              width={"300px"}
-              height={"455px"}
-              className=" absolute top-3 hover:cursor-grab hover:border-[6px] rounded-full border-[6px] border-transparent hover:border-yellow-500 hover:border-dotted z-40"
+              width={"335px"}
+              height={"490px"}
+              className=" absolute top-0 hover:cursor-grab hover:border-[6px] rounded-full border-[6px] border-transparent hover:border-yellow-500 hover:border-dotted z-40"
               onMouseDown={handleMouseDown}
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
