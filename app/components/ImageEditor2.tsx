@@ -214,19 +214,7 @@ const ImageEditor = ({
         throw new Error("Image URL generation failed");
       }
   
-      // Sync with WooCommerce
-      const syncResponse = await fetch(
-        `https://makeminime.com/wp-json/custom/v1/set-image?image=${productImageUrl}&faceImage=${faceImageUrl}`,
-        {
-          method: "GET",
-          credentials: "include",
-        }
-      );
-  
-      if (!syncResponse.ok) {
-        throw new Error(`WooCommerce sync failed (${syncResponse.status})`);
-      }
-      
+
       // Final redirect
       window.location.href = `https://makeminime.com/?add-to-cart=${id}&quantity=1&image=${productImageUrl}&faceImage=${faceImageUrl}`;
   
