@@ -8,7 +8,7 @@ export const action: ActionFunction = async ({ request }) => {
   
     try {
       const result = await cloudinary.uploader.upload(image, {
-        folder:`${productId}`,
+        folder: 'product-customizations',
         format: 'png', 
         quality: 'auto:good', 
         transformation: [

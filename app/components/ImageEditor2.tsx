@@ -191,7 +191,7 @@ const ImageEditor = ({
         const response = await fetch("/api/upload", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ image: imageData,productId }),
+          body: JSON.stringify({ image: imageData }),
         });
   
         if (!response.ok) {
