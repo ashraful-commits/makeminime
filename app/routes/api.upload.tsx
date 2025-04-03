@@ -4,11 +4,11 @@ import { json } from '@remix-run/node';
 import { cloudinary } from '~/utils/cloudinary';
 // app/routes/api.upload.ts
 export const action: ActionFunction = async ({ request }) => {
-    const { image } = await request.json();
+    const { image ,productId} = await request.json();
   
     try {
       const result = await cloudinary.uploader.upload(image, {
-        folder: 'product-customizations',
+        folder:`${productId}`,
         format: 'png', 
         quality: 'auto:good', 
         transformation: [
