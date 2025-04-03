@@ -240,8 +240,8 @@ const ImageEditor = ({
   };
 
   return (
-    <div className="flex flex-col border-r border-r-gray-500 items-center justify-center w-[50%] max-sm:w-full z-0 min-h-[90vh]">
-      <div className="relative w-full flex justify-center items-center  bg-center bg-no-repeat max-sm:scale-75 ">
+    <div className="flex flex-col border-r border-r-gray-500 items-center justify-center w-[50%] max-sm:w-full max-sm:border-b z-0 lg:min-h-[90vh] max-sm:min-h-[50vh] md:min-h-[80vh]">
+      <div className="relative w-full flex justify-center items-center  bg-center bg-no-repeat max-sm:scale-50 md:scale-75 lg:scale-100 lg:min-h-[90vh] max-sm:min-h-[50vh] md:min-h-[80vh] max-sm:h-[35vh]">
         <div
           ref={containerRef}
           className="relative w-[557px] h-[800px] flex justify-center items-center top-0  "
@@ -269,7 +269,7 @@ const ImageEditor = ({
             />
           ) : (
             <img
-              className="top-10 absolute max-h-[350px] z-40"
+              className="top-1 absolute max-h-[500px] z-40"
               src="/images/Layer_40_face_preview.png"
               alt="face preview"
             />

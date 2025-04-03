@@ -495,13 +495,13 @@ export default function ProductIdCustomize() {
                   </a>
                 </span>
 
-                <p className="mt-10 text-md text-gray-500">
+                <p className="mt-10 max-sm:mt-2 text-md text-gray-500">
                   You have {images.length} uploaded{" "}
                   {images.length === 1 ? "image" : "images"}
                 </p>
 
                 {/* Uploaded Images Section */}
-                <div className="w-full px-5 mt-10">
+                <div className="w-full px-5 mt-10 max-sm:mt-3">
                   {images.length > 0 && (
                     <div className="flex justify-between items-center">
                       <h6 className="font-semibold">Uploaded Images</h6>
@@ -516,7 +516,7 @@ export default function ProductIdCustomize() {
                     </div>
                   )}
 
-                  <div className="mt-5 flex gap-3 flex-wrap">
+                  <div className="mt-5 mb-5 flex gap-3 flex-wrap">
                     {images.map((item, index) => (
                       <div
                         key={index}
