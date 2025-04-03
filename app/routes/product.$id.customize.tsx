@@ -21,8 +21,6 @@ export const meta: MetaFunction = () => {
 
 import { json } from "@remix-run/node";
 import { Buffer } from "buffer";
-import hexToRgb from "~/utils/hexToTgb";
-import hexToFilter from "~/utils/HexToFilter";
 
 // Type for product meta data
 interface ProductMetaData {
